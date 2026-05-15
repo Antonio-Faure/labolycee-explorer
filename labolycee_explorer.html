@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Labolycée - Explorateur d'Exercices</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🔬</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #30191E;
+            --secondary: #4F3439;
+            --accent: #6B4C51;
+            --highlight: #e94560;
+            --light: #f8f9fa;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--accent) 100%);
+            min-height: 100vh;
+            color: var(--light);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        h1 {
+            font-family: 'Crimson Pro', serif;
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            background: linear-gradient(45deg, #fff, #e94560);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 300;
+        }
+
+        .filters-section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 40px;
+            animation: fadeInUp 0.8s ease-out 0.2s backwards;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .filter-group {
+            position: relative;
+        }
+
+        .filter-label {
+            display: block;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: rgba(255, 255, 255, 0.9);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        select, input[type="file"] {
+            width: 100%;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .theme-search {
+            width: 100%;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            color: white;
+            font-size: 0.95rem;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+        }
+
+        .theme-search::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .theme-search:focus {
+            outline: none;
+            border-color: var(--highlight);
+            box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.2);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .title-search {
+            width: 100%;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .title-search::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .title-search:focus {
+            outline: none;
+            border-color: var(--highlight);
+            box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.2);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .csv-fallback {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .upload-btn {
+            display: inline-block;
+            background: var(--highlight);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+            margin-top: 10px;
+        }
+
+        .upload-btn:hover {
+            background: #d63951;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(233, 69, 96, 0.4);
+        }
+
+        select[multiple] {
+            padding: 10px;
+        }
+
+        select[multiple] option {
+            padding: 8px 12px;
+            margin: 2px 0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+
+        select[multiple] option:disabled {
+            cursor: not-allowed;
+            opacity: 0.3;
+        }
+
+        select[multiple] option:checked {
+            background: var(--highlight);
+            color: white;
+        }
+
+        .theme-checkboxes {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+
+        .theme-checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .theme-checkbox-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .theme-checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            cursor: pointer;
+            accent-color: var(--highlight);
+        }
+
+        .theme-checkbox-item label {
+            flex: 1;
+            cursor: pointer;
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin: 0;
+        }
+
+        .reset-btn {
+            width: 100%;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: white;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .reset-btn:hover {
+            background: var(--highlight);
+            border-color: var(--highlight);
+            transform: translateY(-2px);
+        }
+
+        .search-btn {
+            width: 100%;
+            padding: 18px 30px;
+            background: linear-gradient(135deg, var(--highlight), #ff6b9d);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 20px;
+            box-shadow: 0 5px 20px rgba(233, 69, 96, 0.3);
+        }
+
+        .search-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(233, 69, 96, 0.5);
+        }
+
+        .search-btn:active {
+            transform: translateY(-1px);
+        }
+
+        select:hover, input[type="file"]:hover {
+            border-color: var(--highlight);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        select:focus, input[type="file"]:focus {
+            outline: none;
+            border-color: var(--highlight);
+            box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.2);
+        }
+
+        select option {
+            background: var(--secondary);
+            color: white;
+            padding: 10px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'Crimson Pro', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--highlight);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .results-section {
+            animation: fadeInUp 0.8s ease-out 0.4s backwards;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+        }
+
+        .exercise-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .exercise-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--highlight), #ff6b9d);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+
+        .exercise-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--highlight);
+            box-shadow: 0 10px 40px rgba(233, 69, 96, 0.3);
+        }
+
+        .exercise-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .exercise-title {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .exercise-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .points-badge {
+            background: var(--highlight);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        .duration-badge {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.9);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-left: 10px;
+        }
+
+        .themes {
+            margin-top: 15px;
+        }
+
+        .theme-tag {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.9);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Labolycée</h1>
+            <p class="subtitle">Explorez et filtrez les exercices de physique-chimie</p>
+        </header>
+
+        <div class="filters-section">
+            <div class="filters-grid" id="filtersGrid">
+                <div class="filter-group csv-fallback" id="csvFallback" style="display: none;">
+                    <label for="csvFile" class="upload-btn">📁 Charger un fichier CSV</label>
+                    <input type="file" id="csvFile" accept=".csv" style="display: none;" />
+                </div>
+
+                <div class="filter-group" id="titleSearchGroup" style="display: none;">
+                    <label class="filter-label" for="titleSearch">Rechercher par titre</label>
+                    <input type="text" id="titleSearch" class="title-search" placeholder="🔍 Rechercher dans les titres...">
+                </div>
+
+                <div class="filter-group" id="pointsGroup" style="display: none;">
+                    <label class="filter-label" for="pointsFilter">Points</label>
+                    <select id="pointsFilter">
+                        <option value="">Tous les points</option>
+                    </select>
+                </div>
+
+                <div class="filter-group" id="themesGroup" style="display: none;">
+                    <label class="filter-label" for="themeFilter">Thèmes et niveaux</label>
+                    <input type="text" id="themeSearch" class="theme-search" placeholder="🔍 Rechercher un thème...">
+                    <div class="theme-checkboxes" id="themeCheckboxes"></div>
+                    <button class="reset-btn" id="resetThemes">Réinitialiser les thèmes</button>
+                </div>
+
+                <div class="filter-group" id="dureeGroup" style="display: none;">
+                    <label class="filter-label" for="dureeFilter">Durée</label>
+                    <select id="dureeFilter">
+                        <option value="">Toutes les durées</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-value" id="totalExercises">0</span>
+                    <span class="stat-label">Exercices totaux</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="filteredExercises">0</span>
+                    <span class="stat-label">Exercices affichés</span>
+                </div>
+            </div>
+
+            <button class="search-btn" id="searchBtn" style="display: none;">🔍 Rechercher</button>
+        </div>
+
+        <div class="results-section">
+            <div class="results-grid" id="resultsGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        let exercises = [];
+        let allExercises = [];
+
+        document.getElementById('csvFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            handleCSVFile(file);
+        });
+
+        function handleCSVFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                parseCSV(event.target.result);
+                document.getElementById('csvFallback').style.display = 'none';
+                showFilters();
+            };
+            reader.readAsText(file);
+        }
+
+        function showFilters() {
+            document.getElementById('titleSearchGroup').style.display = 'block';
+            document.getElementById('pointsGroup').style.display = 'block';
+            document.getElementById('themesGroup').style.display = 'block';
+            document.getElementById('dureeGroup').style.display = 'block';
+            document.getElementById('searchBtn').style.display = 'block';
+        }
+
+        function parseCSV(csvData) {
+            const lines = csvData.split('\n');
+            const headers = lines[0].split(';');
+
+            allExercises = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+
+                const values = lines[i].split(';');
+                const exercise = {
+                    title: values[0],
+                    url: values[1],
+                    nb_points: values[2],
+                    theme: values[3] ? values[3].split('|').map(t => t.trim()) : [],
+                    duree: values[4]
+                };
+                allExercises.push(exercise);
+            }
+
+            exercises = [...allExercises]; // Copie initiale
+            createThemeCheckboxes();
+            updateAllFilters();
+            // Ne pas afficher les exercices au chargement
+            document.getElementById('resultsGrid').innerHTML = '<div class="no-results">Sélectionnez vos critères et cliquez sur "Rechercher"</div>';
+            updateStats(allExercises.length, 0); // Toujours utiliser allExercises.length pour le total
+        }
+
+        function createThemeCheckboxes() {
+            const themes = new Set();
+            exercises.forEach(ex => ex.theme.forEach(t => { if (t) themes.add(t); }));
+
+            const themeCheckboxes = document.getElementById('themeCheckboxes');
+            themeCheckboxes.innerHTML = '';
+            
+            [...themes].sort().forEach(t => {
+                const div = document.createElement('div');
+                div.className = 'theme-checkbox-item';
+                div.dataset.theme = t;
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `theme-${t.replace(/\s+/g, '-')}`;
+                checkbox.value = t;
+                
+                const label = document.createElement('label');
+                label.htmlFor = checkbox.id;
+                label.textContent = t;
+                
+                div.appendChild(checkbox);
+                div.appendChild(label);
+                themeCheckboxes.appendChild(div);
+                
+                checkbox.addEventListener('change', onThemeChange);
+                div.addEventListener('click', function(e) {
+                    if (e.target !== checkbox) {
+                        checkbox.checked = !checkbox.checked;
+                        onThemeChange();
+                    }
+                });
+            });
+        }
+
+        document.getElementById('pointsFilter').addEventListener('change', updateAllFilters);
+        document.getElementById('dureeFilter').addEventListener('change', updateAllFilters);
+        document.getElementById('searchBtn').addEventListener('click', filterExercises);
+        
+        // Recherche par titre
+        document.getElementById('titleSearch').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            
+            if (searchTerm === '') {
+                exercises = [...allExercises];
+            } else {
+                exercises = allExercises.filter(ex => 
+                    ex.title && ex.title.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            updateAllFilters();
+        });
+        
+        // Recherche de thèmes
+        document.getElementById('themeSearch').addEventListener('input', function() {
+            updateAllFilters();
+        });
+        
+        document.getElementById('resetThemes').addEventListener('click', function() {
+            document.querySelectorAll('.theme-checkbox-item input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+            });
+            document.getElementById('themeSearch').value = '';
+            updateAllFilters();
+        });
+
+        function onThemeChange() {
+            // Effacer le champ de recherche quand un thème est sélectionné
+            document.getElementById('themeSearch').value = '';
+            updateAllFilters();
+        }
+
+        function getFilteredExercises(exercisesList, filters) {
+            return exercisesList.filter(ex => {
+                const matchPoints = !filters.points || ex.nb_points === filters.points;
+                const matchTheme = filters.themes.length === 0 || filters.themes.every(theme => ex.theme.includes(theme));
+                const matchDuree = !filters.duree || ex.duree === filters.duree;
+                return matchPoints && matchTheme && matchDuree;
+            });
+        }
+
+        function updateSelectOptions(selectElement, items, getValueFn, emptyOptionHtml) {
+            const availableValues = new Set();
+            items.forEach(item => {
+                const value = getValueFn(item);
+                if (value) availableValues.add(value);
+            });
+
+            const currentValue = selectElement.value;
+            selectElement.innerHTML = emptyOptionHtml;
+
+            [...availableValues].sort((a, b) => {
+                const numA = parseInt(a.match(/\d+/)?.[0] || 0);
+                const numB = parseInt(b.match(/\d+/)?.[0] || 0);
+                return numA - numB;
+            }).forEach(value => {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = value;
+                if (value === currentValue) option.selected = true;
+                selectElement.appendChild(option);
+            });
+        }
+
+        function updateAllFilters() {
+            const filters = {
+                points: document.getElementById('pointsFilter').value,
+                themes: getSelectedThemes(),
+                duree: document.getElementById('dureeFilter').value
+            };
+
+            const compatibleExercises = getFilteredExercises(exercises, filters);
+
+            updateSelectOptions(
+                document.getElementById('pointsFilter'),
+                compatibleExercises,
+                ex => ex.nb_points,
+                '<option value="">Tous les points</option>'
+            );
+            updateThemeOptions(compatibleExercises, filters.themes);
+            updateSelectOptions(
+                document.getElementById('dureeFilter'),
+                compatibleExercises,
+                ex => ex.duree,
+                '<option value="">Toutes les durées</option>'
+            );
+        }
+
+        function updateThemeOptions(compatibleExercises, selectedThemes) {
+            const availableThemes = new Set(selectedThemes);
+            
+            compatibleExercises.forEach(ex => {
+                ex.theme.forEach(t => availableThemes.add(t));
+            });
+
+            const searchTerm = document.getElementById('themeSearch').value.toLowerCase();
+
+            document.querySelectorAll('.theme-checkbox-item').forEach(item => {
+                const theme = item.dataset.theme;
+                const matchesSearch = !searchTerm || theme.toLowerCase().includes(searchTerm);
+                const isAvailable = availableThemes.has(theme);
+                
+                if (isAvailable && matchesSearch) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                    if (!isAvailable) {
+                        const checkbox = item.querySelector('input[type="checkbox"]');
+                        if (checkbox && checkbox.checked) {
+                            checkbox.checked = false;
+                        }
+                    }
+                }
+            });
+        }
+
+        function getSelectedThemes() {
+            const checkboxes = document.querySelectorAll('.theme-checkbox-item input[type="checkbox"]:checked');
+            return Array.from(checkboxes).map(cb => cb.value);
+        }
+
+        function filterExercises() {
+            const filters = {
+                points: document.getElementById('pointsFilter').value,
+                themes: getSelectedThemes(),
+                duree: document.getElementById('dureeFilter').value
+            };
+
+            const filtered = getFilteredExercises(exercises, filters);
+
+            displayExercises(filtered);
+            updateStats(allExercises.length, filtered.length);
+        }
+
+        function displayExercises(exercisesList) {
+            const grid = document.getElementById('resultsGrid');
+            
+            if (exercisesList.length === 0) {
+                grid.innerHTML = '<div class="no-results">Aucun exercice trouvé avec ces filtres</div>';
+                return;
+            }
+
+            grid.innerHTML = exercisesList.map(ex => `
+                <div class="exercise-card" onclick="window.open('${ex.url}', '_blank')">
+                    ${ex.title ? `<h3 class="exercise-title">${ex.title}</h3>` : ''}
+                    <div class="exercise-header">
+                        <div>
+                            ${ex.nb_points ? `<span class="points-badge">${ex.nb_points}</span>` : ''}
+                            ${ex.duree ? `<span class="duration-badge">⏱️ ${ex.duree}</span>` : ''}
+                        </div>
+                    </div>
+                    ${ex.theme.length > 0 ? `
+                        <div class="themes">
+                            ${ex.theme.map(t => `<span class="theme-tag">${t}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        function updateStats(total, filtered) {
+            document.getElementById('totalExercises').textContent = total;
+            document.getElementById('filteredExercises').textContent = filtered;
+        }
+
+        // Chargement automatique du CSV
+        fetch('labolycee.org_exercises.csv')
+            .then(response => {
+                if (!response.ok) throw new Error('Erreur ' + response.status);
+                return response.text();
+            })
+            .then(csvData => {
+                parseCSV(csvData);
+                showFilters();
+            })
+            .catch(() => {
+                document.getElementById('csvFallback').style.display = 'flex';
+            });
+    </script>
+</body>
+</html>
