@@ -176,6 +176,108 @@
             box-shadow: 0 5px 20px rgba(233, 69, 96, 0.4);
         }
 
+        .range-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .range-value {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 16px;
+            border-radius: 8px;
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            min-width: 70px;
+            text-align: center;
+        }
+
+        .range-sep {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 1.1rem;
+        }
+
+        .dual-range {
+            position: relative;
+            height: 36px;
+        }
+
+        .dual-range::before {
+            content: '';
+            position: absolute;
+            inset: 50% 0 auto 0;
+            height: 6px;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 3px;
+        }
+
+        .dual-range-track {
+            position: absolute;
+            height: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-radius: 3px;
+            background: var(--highlight);
+        }
+
+        .range-thumb {
+            position: absolute;
+            width: 100%;
+            height: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            pointer-events: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .range-thumb::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--highlight);
+            cursor: pointer;
+            pointer-events: auto;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            transition: transform 0.15s ease;
+        }
+
+        .range-thumb::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
+
+        .range-thumb::-moz-range-track {
+            background: transparent;
+            border: none;
+        }
+
+        .range-thumb::-moz-range-thumb {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--highlight);
+            cursor: pointer;
+            pointer-events: auto;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .range-thumb--max::-webkit-slider-thumb {
+            background: #ff6b9d;
+        }
+
+        .range-thumb--max::-moz-range-thumb {
+            background: #ff6b9d;
+        }
+
         select[multiple] {
             padding: 10px;
         }
@@ -500,10 +602,17 @@
                 </div>
 
                 <div class="filter-group" id="pointsGroup" style="display: none;">
-                    <label class="filter-label" for="pointsFilter">Points</label>
-                    <select id="pointsFilter">
-                        <option value="">Tous les points</option>
-                    </select>
+                    <label class="filter-label">Points</label>
+                    <div class="range-display">
+                        <span class="range-value" id="pointsDisplayMin">—</span>
+                        <span class="range-sep">–</span>
+                        <span class="range-value" id="pointsDisplayMax">—</span>
+                    </div>
+                    <div class="dual-range" id="pointsRange">
+                        <div class="dual-range-track" id="pointsTrack"></div>
+                        <input type="range" id="pointsMin" class="range-thumb range-thumb--min">
+                        <input type="range" id="pointsMax" class="range-thumb range-thumb--max">
+                    </div>
                 </div>
 
                 <div class="filter-group" id="themesGroup" style="display: none;">
@@ -514,10 +623,17 @@
                 </div>
 
                 <div class="filter-group" id="dureeGroup" style="display: none;">
-                    <label class="filter-label" for="dureeFilter">Durée</label>
-                    <select id="dureeFilter">
-                        <option value="">Toutes les durées</option>
-                    </select>
+                    <label class="filter-label">Durée</label>
+                    <div class="range-display">
+                        <span class="range-value" id="dureeDisplayMin">—</span>
+                        <span class="range-sep">–</span>
+                        <span class="range-value" id="dureeDisplayMax">—</span>
+                    </div>
+                    <div class="dual-range" id="dureeRange">
+                        <div class="dual-range-track" id="dureeTrack"></div>
+                        <input type="range" id="dureeMin" class="range-thumb range-thumb--min">
+                        <input type="range" id="dureeMax" class="range-thumb range-thumb--max">
+                    </div>
                 </div>
             </div>
 
@@ -585,15 +701,34 @@
                     theme: values[3] ? values[3].split('|').map(t => t.trim()) : [],
                     duree: values[4]
                 };
+                exercise.points_num = parseFloat(exercise.nb_points) || 0;
+                exercise.duree_min = parseDuree(exercise.duree);
                 allExercises.push(exercise);
             }
 
-            exercises = [...allExercises]; // Copie initiale
+            exercises = [...allExercises];
             createThemeCheckboxes();
+
+            const pointsValues = allExercises.map(ex => ex.points_num);
+            const dureeValues = allExercises.map(ex => ex.duree_min);
+
+            initDualRange({
+                minId: 'pointsMin', maxId: 'pointsMax',
+                trackId: 'pointsTrack',
+                displayMinId: 'pointsDisplayMin', displayMaxId: 'pointsDisplayMax',
+                dataValues: pointsValues, formatter: formatPoints
+            });
+
+            initDualRange({
+                minId: 'dureeMin', maxId: 'dureeMax',
+                trackId: 'dureeTrack',
+                displayMinId: 'dureeDisplayMin', displayMaxId: 'dureeDisplayMax',
+                dataValues: dureeValues, formatter: formatDuree
+            });
+
             updateAllFilters();
-            // Ne pas afficher les exercices au chargement
             document.getElementById('resultsGrid').innerHTML = '<div class="no-results">Sélectionnez vos critères et cliquez sur "Rechercher"</div>';
-            updateStats(allExercises.length, 0); // Toujours utiliser allExercises.length pour le total
+            updateStats(allExercises.length, 0);
         }
 
         function createThemeCheckboxes() {
@@ -631,8 +766,6 @@
             });
         }
 
-        document.getElementById('pointsFilter').addEventListener('change', updateAllFilters);
-        document.getElementById('dureeFilter').addEventListener('change', updateAllFilters);
         document.getElementById('searchBtn').addEventListener('click', filterExercises);
         
         // Recherche par titre
@@ -664,65 +797,142 @@
         });
 
         function onThemeChange() {
-            // Effacer le champ de recherche quand un thème est sélectionné
             document.getElementById('themeSearch').value = '';
             updateAllFilters();
         }
 
-        function getFilteredExercises(exercisesList, filters) {
-            return exercisesList.filter(ex => {
-                const matchPoints = !filters.points || ex.nb_points === filters.points;
-                const matchTheme = filters.themes.length === 0 || filters.themes.every(theme => ex.theme.includes(theme));
-                const matchDuree = !filters.duree || ex.duree === filters.duree;
-                return matchPoints && matchTheme && matchDuree;
-            });
+        function parseDuree(raw) {
+            if (!raw) return 0;
+            let minutes = 0;
+            const h = raw.match(/(\d+)\s*heure/);
+            if (h) minutes += parseInt(h[1]) * 60;
+            const m = raw.match(/(\d+)\s*minutes?/);
+            if (m) minutes += parseInt(m[1]);
+            return minutes || 0;
         }
 
-        function updateSelectOptions(selectElement, items, getValueFn, emptyOptionHtml) {
-            const availableValues = new Set();
-            items.forEach(item => {
-                const value = getValueFn(item);
-                if (value) availableValues.add(value);
-            });
+        function formatPoints(n) {
+            if (n === 0) return '—';
+            return n % 1 === 0 ? `${n} pts` : `${n} pt`;
+        }
 
-            const currentValue = selectElement.value;
-            selectElement.innerHTML = emptyOptionHtml;
+        function formatDuree(minutes) {
+            if (minutes === 0) return '—';
+            const h = Math.floor(minutes / 60);
+            const m = minutes % 60;
+            if (h === 0) return `${m}min`;
+            if (m === 0) return `${h}h`;
+            return `${h}h${m}`;
+        }
 
-            [...availableValues].sort((a, b) => {
-                const numA = parseInt(a.match(/\d+/)?.[0] || 0);
-                const numB = parseInt(b.match(/\d+/)?.[0] || 0);
-                return numA - numB;
-            }).forEach(value => {
-                const option = document.createElement('option');
-                option.value = value;
-                option.textContent = value;
-                if (value === currentValue) option.selected = true;
-                selectElement.appendChild(option);
+        function initDualRange(config) {
+            const { minId, maxId, trackId, displayMinId, displayMaxId, dataValues, formatter } = config;
+
+            const minEl = document.getElementById(minId);
+            const maxEl = document.getElementById(maxId);
+            const trackEl = document.getElementById(trackId);
+            const displayMin = document.getElementById(displayMinId);
+            const displayMax = document.getElementById(displayMaxId);
+
+            const validValues = [...new Set(dataValues.filter(v => v > 0))].sort((a, b) => a - b);
+            const dataMin = validValues.length > 0 ? validValues[0] : 0;
+            const dataMax = validValues.length > 0 ? validValues[validValues.length - 1] : 100;
+
+            let step = 1;
+            if (validValues.length > 1) {
+                const diffs = [];
+                for (let i = 1; i < validValues.length; i++) {
+                    diffs.push(validValues[i] - validValues[i - 1]);
+                }
+                const minDiff = Math.min(...diffs);
+                if (minDiff > 0) step = minDiff;
+            }
+
+            function snapToNearest(value) {
+                if (value <= dataMin) return dataMin;
+                if (validValues.length === 0) return value;
+                return validValues.reduce((prev, curr) =>
+                    Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev
+                );
+            }
+
+            minEl.min = dataMin;
+            minEl.max = dataMax;
+            minEl.step = step;
+            minEl.value = dataMin;
+
+            maxEl.min = dataMin;
+            maxEl.max = dataMax;
+            maxEl.step = step;
+            maxEl.value = dataMax;
+
+            function updateDisplay() {
+                let minVal = parseFloat(minEl.value);
+                let maxVal = parseFloat(maxEl.value);
+
+                displayMin.textContent = formatter(minVal);
+                displayMax.textContent = formatter(maxVal);
+
+                const total = dataMax - dataMin;
+                const leftPct = total > 0 ? ((minVal - dataMin) / total) * 100 : 0;
+                const rightPct = total > 0 ? ((dataMax - maxVal) / total) * 100 : 0;
+                trackEl.style.left = leftPct + '%';
+                trackEl.style.right = rightPct + '%';
+            }
+
+            function onInput(which) {
+                if (which === 'min') {
+                    const snapped = snapToNearest(parseFloat(minEl.value));
+                    minEl.value = snapped;
+                    if (snapped > parseFloat(maxEl.value)) {
+                        maxEl.value = snapped;
+                    }
+                } else {
+                    const snapped = snapToNearest(parseFloat(maxEl.value));
+                    maxEl.value = snapped;
+                    if (snapped < parseFloat(minEl.value)) {
+                        minEl.value = snapped;
+                    }
+                }
+                updateDisplay();
+                updateAllFilters();
+            }
+
+            minEl.addEventListener('input', () => onInput('min'));
+            maxEl.addEventListener('input', () => onInput('max'));
+
+            updateDisplay();
+        }
+
+        function getFilteredExercises(exercisesList, filters) {
+            return exercisesList.filter(ex => {
+                const fullRangePoints = filters.pointsMin === filters.pointsDataMin && filters.pointsMax === filters.pointsDataMax;
+                const matchPoints = fullRangePoints
+                    || (ex.points_num >= filters.pointsMin && ex.points_num <= filters.pointsMax);
+                const matchTheme = filters.themes.length === 0
+                    || filters.themes.every(theme => ex.theme.includes(theme));
+                const fullRangeDuree = filters.dureeMin === filters.dureeDataMin && filters.dureeMax === filters.dureeDataMax;
+                const matchDuree = fullRangeDuree
+                    || (ex.duree_min >= filters.dureeMin && ex.duree_min <= filters.dureeMax);
+                return matchPoints && matchTheme && matchDuree;
             });
         }
 
         function updateAllFilters() {
             const filters = {
-                points: document.getElementById('pointsFilter').value,
+                pointsMin: parseFloat(document.getElementById('pointsMin').value),
+                pointsMax: parseFloat(document.getElementById('pointsMax').value),
+                pointsDataMin: parseFloat(document.getElementById('pointsMin').min),
+                pointsDataMax: parseFloat(document.getElementById('pointsMax').max),
                 themes: getSelectedThemes(),
-                duree: document.getElementById('dureeFilter').value
+                dureeMin: parseFloat(document.getElementById('dureeMin').value),
+                dureeMax: parseFloat(document.getElementById('dureeMax').value),
+                dureeDataMin: parseFloat(document.getElementById('dureeMin').min),
+                dureeDataMax: parseFloat(document.getElementById('dureeMax').max)
             };
 
             const compatibleExercises = getFilteredExercises(exercises, filters);
-
-            updateSelectOptions(
-                document.getElementById('pointsFilter'),
-                compatibleExercises,
-                ex => ex.nb_points,
-                '<option value="">Tous les points</option>'
-            );
             updateThemeOptions(compatibleExercises, filters.themes);
-            updateSelectOptions(
-                document.getElementById('dureeFilter'),
-                compatibleExercises,
-                ex => ex.duree,
-                '<option value="">Toutes les durées</option>'
-            );
         }
 
         function updateThemeOptions(compatibleExercises, selectedThemes) {
@@ -760,9 +970,15 @@
 
         function filterExercises() {
             const filters = {
-                points: document.getElementById('pointsFilter').value,
+                pointsMin: parseFloat(document.getElementById('pointsMin').value),
+                pointsMax: parseFloat(document.getElementById('pointsMax').value),
+                pointsDataMin: parseFloat(document.getElementById('pointsMin').min),
+                pointsDataMax: parseFloat(document.getElementById('pointsMax').max),
                 themes: getSelectedThemes(),
-                duree: document.getElementById('dureeFilter').value
+                dureeMin: parseFloat(document.getElementById('dureeMin').value),
+                dureeMax: parseFloat(document.getElementById('dureeMax').value),
+                dureeDataMin: parseFloat(document.getElementById('dureeMin').min),
+                dureeDataMax: parseFloat(document.getElementById('dureeMax').max)
             };
 
             const filtered = getFilteredExercises(exercises, filters);
