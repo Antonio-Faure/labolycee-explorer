@@ -656,6 +656,49 @@
             color: var(--text-muted);
         }
 
+        .doc-links {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--stat-border);
+        }
+
+        .doc-btn {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-family: var(--font-body);
+        }
+
+        .doc-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .sujet-btn {
+            background: var(--highlight);
+            color: white;
+        }
+
+        .sujet-btn:hover {
+            box-shadow: 0 4px 15px var(--highlight-shadow);
+        }
+
+        .corrige-btn {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .corrige-btn:hover {
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);
+        }
+
         /* ── THEME TOGGLE ── */
         .theme-toggle {
             display: inline-flex;
@@ -813,6 +856,10 @@
                     <span class="stat-value" id="filteredExercises">0</span>
                     <span class="stat-label">Exercices affichés</span>
                 </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="coverageRate">0%</span>
+                    <span class="stat-label">Avec corrigé</span>
+                </div>
             </div>
 
             <button class="search-btn" id="searchBtn" style="display: none;">🔍 Rechercher</button>
@@ -898,12 +945,18 @@
                 if (!lines[i].trim()) continue;
 
                 const values = lines[i].split(';');
+                const sujetUrl = (values[5] || '').trim();
+                const correctionUrl = (values[6] || '').trim();
                 const exercise = {
                     title: values[0],
                     url: values[1],
                     nb_points: values[2],
                     theme: values[3] ? values[3].split('|').map(t => t.trim()) : [],
-                    duree: values[4]
+                    duree: values[4],
+                    sujet_url: sujetUrl,
+                    correction_url: correctionUrl,
+                    has_sujet: sujetUrl.length > 0 && sujetUrl.startsWith('http'),
+                    has_correction: correctionUrl.length > 0 && correctionUrl.startsWith('http')
                 };
                 exercise.points_num = parseFloat(exercise.nb_points) || 0;
                 exercise.duree_min = parseDuree(exercise.duree);
@@ -1199,27 +1252,44 @@
                 return;
             }
 
-            grid.innerHTML = exercisesList.map(ex => `
-                <div class="exercise-card" onclick="window.open('${ex.url}', '_blank')">
-                    ${ex.title ? `<h3 class="exercise-title">${ex.title}</h3>` : ''}
-                    <div class="exercise-header">
-                        <div>
-                            ${ex.nb_points ? `<span class="points-badge">${ex.nb_points}</span>` : ''}
-                            ${ex.duree ? `<span class="duration-badge">⏱️ ${ex.duree}</span>` : ''}
+            grid.innerHTML = exercisesList.map(ex => {
+                const sujetBtn = ex.has_sujet
+                    ? `<button class="doc-btn sujet-btn" onclick="event.stopPropagation(); window.open('${ex.sujet_url}', '_blank')" title="Ouvrir le sujet PDF">📄 Sujet</button>`
+                    : '';
+                const corrigeBtn = ex.has_correction
+                    ? `<button class="doc-btn corrige-btn" onclick="event.stopPropagation(); window.open('${ex.correction_url}', '_blank')" title="Ouvrir le corrigé PDF">✅ Corrigé</button>`
+                    : '';
+                return `
+                    <div class="exercise-card" onclick="window.open('${ex.url}', '_blank')">
+                        ${ex.title ? `<h3 class="exercise-title">${ex.title}</h3>` : ''}
+                        <div class="exercise-header">
+                            <div>
+                                ${ex.nb_points ? `<span class="points-badge">${ex.nb_points}</span>` : ''}
+                                ${ex.duree ? `<span class="duration-badge">⏱️ ${ex.duree}</span>` : ''}
+                            </div>
                         </div>
+                        ${ex.theme.length > 0 ? `
+                            <div class="themes">
+                                ${ex.theme.map(t => `<span class="theme-tag">${t}</span>`).join('')}
+                            </div>
+                        ` : ''}
+                        ${sujetBtn || corrigeBtn ? `
+                            <div class="doc-links">
+                                ${sujetBtn}
+                                ${corrigeBtn}
+                            </div>
+                        ` : ''}
                     </div>
-                    ${ex.theme.length > 0 ? `
-                        <div class="themes">
-                            ${ex.theme.map(t => `<span class="theme-tag">${t}</span>`).join('')}
-                        </div>
-                    ` : ''}
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function updateStats(total, filtered) {
             document.getElementById('totalExercises').textContent = total;
             document.getElementById('filteredExercises').textContent = filtered;
+            const withCorr = allExercises.filter(ex => ex.has_correction).length;
+            const coverageRate = total > 0 ? ((withCorr / total) * 100).toFixed(1) : '0.0';
+            document.getElementById('coverageRate').textContent = coverageRate + '%';
         }
 
         // Chargement automatique du CSV
